@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Habit Tracker Pro</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {font-family: Arial, sans-serif; background:#f4f6f8; margin:0; padding:0;}
+    header {background:#4CAF50; color:white; padding:15px; text-align:center;}
+    .container {max-width:900px; margin:20px auto; background:white; padding:20px; border-radius:10px;}
+    h2 {margin-top:30px;}
+    input, button {padding:8px; margin:5px 0;}
+    button {background:#4CAF50; color:white; border:none; border-radius:5px; cursor:pointer;}
+    button:hover {background:#45a049;}
+    table {width:100%; border-collapse:collapse; margin-top:10px;}
+    table, th, td {border:1px solid #ccc;}
+    th, td {padding:8px; text-align:center;}
+    .done {color:green; font-weight:bold;}
+    .notdone {color:red; font-weight:bold;}
+    .flex {display:flex; gap:20px; flex-wrap:wrap;}
+    canvas {max-width:300px;}
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Habit Tracker Pro</h1>
+  <p>Track habits, progress, and history</p>
+</header>
+
+<div class="container">
+
+  <h2>Add Habit Record</h2>
+  <label>Date:</label><br>
+  <input type="date" id="date"><br>
+  <label>Habit Name:</label><br>
+  <input type="text" id="habit" placeholder="e.g. Exercise"><br>
+  <label>Status:</label><br>
+  <select id="status">
+    <option value="Done">Done</option>
+    <option value="Not Done">Not Done</option>
+  </select><br>
+  <button onclick="addRecord()">Add Record</button>
+
+  <h2>Record History (Excel‑like)</h2>
+  <table id="recordTable">
+    <tr>
+      <th>Date</th>
+      <th>Habit</th>
+      <th>Status</th>
+    </tr>
+  </table>
+
+  <h2>Progress</h2>
+  <div class="flex">
+    <div>
+      <p id="progressText">Completed: 0%</p>
+      <canvas id="pieChart"></canvas>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  let records = JSON.parse(localStorage.getItem("records")) || [];
+
+  function addRecord() {
+    const date = document.getElementById('date').value;
+    const habit = document.getElementById('habit').value;
+    const status = document.getElementById('status').value;
+    if (!date || !habit) return alert("Fill all fields");
+
+    records.push({date, habit, status});
+    localStorage.setItem("records", JSON.stringify(records));
+    displayRecords();
+    updateChart();
+  }
+
+  function displayRecords() {
+    const table = document.getElementById('recordTable');
+    table.innerHTML = `<tr><th>Date</th><th>Habit</th><th>Status</th></tr>`;
+    records.forEach(r => {
+      table.innerHTML += `<tr><td>${r.date}</td><td>${r.habit}</td><td class="${r.status === 'Done' ? 'done' : 'notdone'}">${r.status}</td></tr>`;
+    });
+  }
+
+  let chart;
+  function updateChart() {
+    const done = records.filter(r => r.status === 'Done').length;
+    const notDone = records.length - done;
+    const percent = records.length === 0 ? 0 : Math.round((done / records.length) * 100);
+    document.getElementById('progressText').innerText = `Completed: ${percent}%`;
+
+    if (chart) chart.destroy();
+    chart = new Chart(document.getElementById('pieChart'), {
+      type: 'pie',
+      data: {
+        labels: ['Done', 'Not Done'],
+        datasets: [{data: [done, notDone]}]
+      }
+    });
+  }
+
+  displayRecords();
+  updateChart();
+</script>
+
+</body>
+</html>
